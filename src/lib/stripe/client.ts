@@ -1,13 +1,49 @@
-import Stripe from 'stripe';
+﻿import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
+// Lazy initialization - prevents build-time throw when env var is not set.
+// Stripe is only instantiated when an API route actually calls getStripe().
+let _stripe: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2026-03-25.dahlia',
+      typescript: true,
+    });
+  }
+  return _stripe;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-03-25.dahlia',
-  typescript: true,
-});
+// Typed convenience proxy - explicit params avoid Stripe overload resolution issues.
+export const stripe = {
+  checkout: {
+    sessions: {
+      create: (
+        params: Stripe.Checkout.SessionCreateParams,
+        options?: Stripe.RequestOptions,
+      ) => getStripe().checkout.sessions.create(params, options),
+    },
+  },
+  billingPortal: {
+    sessions: {
+      create: (
+        params: Stripe.BillingPortal.SessionCreateParams,
+        options?: Stripe.RequestOptions,
+      ) => getStripe().billingPortal.sessions.create(params, options),
+    },
+  },
+  webhooks: {
+    // Only exposing the 3 required params - tolerance/cryptoProvider not needed for standard webhook validation.
+    constructEvent: (
+      payload: string | Buffer,
+      header: string | string[],
+      secret: string,
+    ) => getStripe().webhooks.constructEvent(payload, header, secret),
+  },
+};
 
 export const PLANS = {
   free: {

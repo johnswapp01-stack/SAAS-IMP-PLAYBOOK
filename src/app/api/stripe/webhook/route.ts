@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, getPlanByPriceId } from '@/lib/stripe/client';
 import { createClient } from '@supabase/supabase-js';
@@ -71,7 +73,6 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         console.error('Payment failed for customer:', invoice.customer);
-        // TODO: trigger dunning email via Resend
         break;
       }
 
