@@ -32,6 +32,23 @@ export type FeedbackType = 'accepted' | 'modified' | 'rejected';
 export type ArtifactType = 'document' | 'test_report' | 'migration_log' | 'config_file' | 'status_report' | 'project_plan';
 export type ArtifactFormat = 'markdown' | 'pdf' | 'json' | 'xlsx' | 'docx';
 
+// Operations enums
+export type TimeCategory = 'delivery' | 'admin' | 'internal' | 'training';
+export type BillingModel = 'fixed_fee' | 'time_and_materials' | 'milestone';
+export type AllocationStatus = 'active' | 'planned' | 'completed';
+export type ComplianceAction = 'warn' | 'block' | 'notify' | 'auto_correct';
+export type ComplianceSeverity = 'info' | 'warning' | 'critical';
+export type ViolationStatus = 'open' | 'acknowledged' | 'resolved' | 'waived';
+
+// Delivery governance enums
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type RiskSignalStatus = 'detected' | 'acknowledged' | 'mitigated' | 'escalated' | 'false_positive';
+export type RiskOutcome = 'risk_materialized' | 'risk_avoided' | 'false_alarm';
+export type ClientUpdateType = 'weekly_status' | 'milestone_reached' | 'risk_alert' | 'go_live_countdown';
+export type ClientUpdateStatus = 'draft' | 'approved' | 'sent' | 'failed';
+export type SignalTrend = 'improving' | 'stable' | 'declining';
+export type PlanStatus = 'draft' | 'active' | 'superseded';
+
 // Self-healing enums
 export type HealthCheckType = 'api_availability' | 'db_performance' | 'agent_success_rate' | 'queue_depth' | 'error_rate';
 export type SystemHealthStatus = 'healthy' | 'degraded' | 'critical';
@@ -184,6 +201,173 @@ export interface StatusReport {
   created_at: string;
 }
 
+// --- Layer 1: Operations Models ---
+
+export interface TimeEntry {
+  id: string;
+  org_id: string;
+  member_id: string;
+  engagement_id: string;
+  date: string;
+  hours: number;
+  billable: boolean;
+  category: TimeCategory;
+  description: string | null;
+  agent_generated: boolean;
+  approved: boolean;
+  // Joined
+  member?: OrgMember;
+}
+
+export interface FinancialTracking {
+  id: string;
+  org_id: string;
+  engagement_id: string;
+  budget_total: number | null;
+  budget_consumed: number | null;
+  revenue_recognized: number | null;
+  margin_target: number | null;
+  margin_actual: number | null;
+  billing_model: BillingModel;
+  currency: string;
+  last_calculated: string;
+}
+
+export interface ResourceProfile {
+  id: string;
+  org_id: string;
+  member_id: string;
+  skills: string[];
+  max_concurrent_engagements: number;
+  available_hours_per_week: number;
+  hourly_cost: number | null;
+  billable_rate: number | null;
+  timezone: string;
+  // Joined
+  member?: OrgMember;
+}
+
+export interface ResourceAllocation {
+  id: string;
+  org_id: string;
+  member_id: string;
+  engagement_id: string;
+  role: string;
+  allocated_hours_per_week: number;
+  start_date: string | null;
+  end_date: string | null;
+  status: AllocationStatus;
+  // Joined
+  member?: OrgMember;
+}
+
+export interface ComplianceRule {
+  id: string;
+  org_id: string;
+  rule_name: string;
+  rule_type: string;
+  condition: Record<string, unknown>;
+  action: ComplianceAction;
+  severity: ComplianceSeverity;
+  is_active: boolean;
+  created_by: string | null;
+}
+
+export interface ComplianceViolation {
+  id: string;
+  org_id: string;
+  rule_id: string;
+  engagement_id: string | null;
+  member_id: string | null;
+  violation_detail: Record<string, unknown>;
+  status: ViolationStatus;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  // Joined
+  rule?: ComplianceRule;
+}
+
+/// --- Layer 2: Delivery Governance Models ---
+
+export interface ProjectPlan {
+  id: string;
+  org_id: string;
+  engagement_id: string;
+  version: number;
+  generated_by: string;
+  milestones: PlanMilestone[];
+  phases: PlanPhase[];
+  assumptions: string[];
+  constraints: string[];
+  source_document: string | null;
+  status: PlanStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface PlanMilestone {
+  name: string;
+  target_date: string;
+  status: 'pending' | 'complete' | 'at_risk' | 'missed';
+  owner?: string;
+  notes?: string;
+}
+
+export interface PlanPhase {
+  name: string;
+  start_date: string;
+  end_date: string;
+  status: 'not_started' | 'in_progress' | 'complete';
+  deliverables?: string[];
+}
+
+export interface RiskSignal {
+  id: string;
+  org_id: string;
+  engagement_id: string;
+  signal_type: string;
+  severity: RiskSeverity;
+  confidence: number;
+  description: string;
+  evidence: Record<string, unknown>;
+  recommended_action: string | null;
+  status: RiskSignalStatus;
+  detected_at: string;
+  acknowledged_by: string | null;
+  resolution_notes: string | null;
+  outcome: RiskOutcome | null;
+}
+
+export interface ClientUpdate {
+  id: string;
+  org_id: string;
+  engagement_id: string;
+  update_type: ClientUpdateType;
+  generated_by: string;
+  content: string;
+  recipients: Record<string, unknown>[];
+  status: ClientUpdateStatus;
+  approved_by: string | null;
+  sent_at: string | null;
+  opened_by: Record<string, unknown>[];
+  created_at: string;
+}
+
+export interface DeliverySignal {
+  id: string;
+  org_id: string;
+  engagement_id: string;
+  signal_category: string;
+  current_value: number | null;
+  expected_value: number | null;
+  deviation: number | null;
+  trend: SignalTrend;
+  measured_at: string;
+  data_points: Record<string, unknown>;
+}
+
 // --- Layer 3: Agent Models ---
 
 export interface AgentDefinition {
@@ -303,6 +487,28 @@ export interface SelfHealingEvent {
   related_task_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+}
+
+export interface OutcomeCorrelation {
+  id: string;
+  org_id: string;
+  signal_type: string;
+  action_taken: string | null;
+  outcome: 'positive' | 'neutral' | 'negative';
+  engagement_id: string | null;
+  correlation_data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ErrorPattern {
+  id: string;
+  error_signature: string;
+  error_type: string;
+  occurrence_count: number;
+  last_occurrence: string;
+  auto_resolution: string | null;
+  resolution_success_rate: number;
+  requires_human: boolean;
 }
 
 // --- UI State Types ---

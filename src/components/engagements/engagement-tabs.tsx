@@ -2,21 +2,45 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { ScopeTab } from './tabs/scope-tab';
+import { StakeholdersTab } from './tabs/stakeholders-tab';
+import { DecisionsTab } from './tabs/decisions-tab';
+import { RaciTab } from './tabs/raci-tab';
+import { ChecklistTab } from './tabs/checklist-tab';
+import { LessonsTab } from './tabs/lessons-tab';
+import { ReportsTab } from './tabs/reports-tab';
+import { TimeEntriesTab } from './tabs/time-entries-tab';
+import { BudgetTab } from './tabs/budget-tab';
+import { ResourcesTab } from './tabs/resources-tab';
+import { ProjectPlanTab } from './tabs/project-plan-tab';
+import { RiskSignalsTab } from './tabs/risk-signals-tab';
+import { HealthTab } from './tabs/health-tab';
+import { ClientUpdatesTab } from './tabs/client-updates-tab';
+import { DeliveryTrendsTab } from './tabs/delivery-trends-tab';
+import { AgentsTab } from './tabs/agents-tab';
 
 interface EngagementTabsProps {
   engagementId: string;
 }
 
 const tabs = [
-  { id: 'scope', label: 'Scope (MoSCoW)', icon: '🎯' },
-  { id: 'stakeholders', label: 'Stakeholders', icon: '👥' },
-  { id: 'decisions', label: 'Decisions', icon: '⚖️' },
-  { id: 'raci', label: 'RACI', icon: '📊' },
-  { id: 'kickoff', label: 'Kickoff', icon: '🚀' },
-  { id: 'golive', label: 'Go-Live', icon: '✅' },
-  { id: 'reports', label: 'Reports', icon: '📄' },
-  { id: 'lessons', label: 'Lessons', icon: '💡' },
-  { id: 'agents', label: 'AI Agents', icon: '🤖' },
+  { id: 'scope', label: 'Scope', icon: '🎯', group: 'delivery' },
+  { id: 'stakeholders', label: 'Stakeholders', icon: '👥', group: 'delivery' },
+  { id: 'decisions', label: 'Decisions', icon: '⚖️', group: 'delivery' },
+  { id: 'raci', label: 'RACI', icon: '📊', group: 'delivery' },
+  { id: 'kickoff', label: 'Kickoff', icon: '🚀', group: 'delivery' },
+  { id: 'golive', label: 'Go-Live', icon: '✅', group: 'delivery' },
+  { id: 'time', label: 'Time', icon: '⏱️', group: 'ops' },
+  { id: 'budget', label: 'Budget', icon: '💰', group: 'ops' },
+  { id: 'resources', label: 'Resources', icon: '👤', group: 'ops' },
+  { id: 'plan', label: 'Plan', icon: '📅', group: 'governance' },
+  { id: 'health', label: 'Health', icon: '💚', group: 'governance' },
+  { id: 'risks', label: 'Risks', icon: '🛡️', group: 'governance' },
+  { id: 'updates', label: 'Updates', icon: '📨', group: 'governance' },
+  { id: 'trends', label: 'Trends', icon: '📈', group: 'governance' },
+  { id: 'reports', label: 'Reports', icon: '📄', group: 'delivery' },
+  { id: 'lessons', label: 'Lessons', icon: '💡', group: 'delivery' },
+  { id: 'agents', label: 'AI Agents', icon: '🤖', group: 'ai' },
 ] as const;
 
 type TabId = typeof tabs[number]['id'];
@@ -49,48 +73,24 @@ export function EngagementTabs({ engagementId }: EngagementTabsProps) {
 
       {/* Tab content */}
       <div>
-        {activeTab === 'scope' && <ScopeTabPlaceholder engagementId={engagementId} />}
-        {activeTab === 'stakeholders' && <TabPlaceholder name="Stakeholders" description="Track stakeholder influence, communication preferences, and concerns." />}
-        {activeTab === 'decisions' && <TabPlaceholder name="Decisions" description="Log decisions with context, impact, and reversibility." />}
-        {activeTab === 'raci' && <TabPlaceholder name="RACI Matrix" description="Assign Responsible, Accountable, Consulted, and Informed roles per deliverable." />}
-        {activeTab === 'kickoff' && <TabPlaceholder name="Kickoff Checklist" description="Track pre-kickoff, during-kickoff, and post-kickoff tasks." />}
-        {activeTab === 'golive' && <TabPlaceholder name="Go-Live Checklist" description="Phase-gated checklist from Pre-UAT through Post-Launch." />}
-        {activeTab === 'reports' && <TabPlaceholder name="Status Reports" description="Generate and manage internal, customer-facing, and executive reports." />}
-        {activeTab === 'lessons' && <TabPlaceholder name="Lessons Learned" description="Capture findings, categorize by type, and track recommendations." />}
-        {activeTab === 'agents' && <TabPlaceholder name="AI Agents" description="View agent tasks, artifacts, and execution history for this engagement." />}
+        {activeTab === 'scope' && <ScopeTab engagementId={engagementId} />}
+        {activeTab === 'stakeholders' && <StakeholdersTab engagementId={engagementId} />}
+        {activeTab === 'decisions' && <DecisionsTab engagementId={engagementId} />}
+        {activeTab === 'raci' && <RaciTab engagementId={engagementId} />}
+        {activeTab === 'kickoff' && <ChecklistTab engagementId={engagementId} checklistType="kickoff" />}
+        {activeTab === 'golive' && <ChecklistTab engagementId={engagementId} checklistType="go_live" />}
+        {activeTab === 'time' && <TimeEntriesTab engagementId={engagementId} />}
+        {activeTab === 'budget' && <BudgetTab engagementId={engagementId} />}
+        {activeTab === 'resources' && <ResourcesTab engagementId={engagementId} />}
+        {activeTab === 'plan' && <ProjectPlanTab engagementId={engagementId} />}
+        {activeTab === 'health' && <HealthTab engagementId={engagementId} />}
+        {activeTab === 'risks' && <RiskSignalsTab engagementId={engagementId} />}
+        {activeTab === 'updates' && <ClientUpdatesTab engagementId={engagementId} />}
+        {activeTab === 'trends' && <DeliveryTrendsTab engagementId={engagementId} />}
+        {activeTab === 'reports' && <ReportsTab engagementId={engagementId} />}
+        {activeTab === 'lessons' && <LessonsTab engagementId={engagementId} />}
+        {activeTab === 'agents' && <AgentsTab engagementId={engagementId} />}
       </div>
-    </div>
-  );
-}
-
-function ScopeTabPlaceholder({ engagementId }: { engagementId: string }) {
-  return (
-    <div className="rounded-lg border border-border p-8 text-center">
-      <div className="text-3xl mb-3">🎯</div>
-      <h3 className="font-semibold text-lg mb-2">MoSCoW Scope Tracker</h3>
-      <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
-        Track requirements by priority (Must / Should / Could / Won&apos;t).
-        Drag and drop to reorder. Filter by status and priority.
-      </p>
-      <div className="flex items-center justify-center gap-2">
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Must</span>
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Should</span>
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Could</span>
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Won&apos;t</span>
-      </div>
-      <button className="mt-6 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
-        + Add Scope Item
-      </button>
-    </div>
-  );
-}
-
-function TabPlaceholder({ name, description }: { name: string; description: string }) {
-  return (
-    <div className="rounded-lg border border-border border-dashed p-8 text-center">
-      <h3 className="font-semibold text-lg mb-2">{name}</h3>
-      <p className="text-muted-foreground text-sm max-w-md mx-auto">{description}</p>
-      <p className="mt-4 text-xs text-muted-foreground">Phase 2 — coming next</p>
     </div>
   );
 }

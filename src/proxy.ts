@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/engagements', request.url));
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return response;

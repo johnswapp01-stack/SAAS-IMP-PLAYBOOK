@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+﻿import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Sidebar } from '@/components/layout/sidebar';
+import { DashboardShell } from '@/components/layout/dashboard-shell';
 
 export default async function DashboardLayout({
   children,
@@ -14,12 +14,19 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  // Check if user has at least one accepted org membership
+  const { data: memberships } = await supabase
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .not('accepted_at', 'is', null)
+    .limit(1);
+
+  const hasOrg = !!(memberships && memberships.length > 0);
+
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar user={user} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6">{children}</div>
-      </main>
-    </div>
+    <DashboardShell user={user} hasOrg={hasOrg}>
+      {children}
+    </DashboardShell>
   );
 }

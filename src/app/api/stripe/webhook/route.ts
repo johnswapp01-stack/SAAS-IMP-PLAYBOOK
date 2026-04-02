@@ -70,9 +70,50 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case 'invoice.paid': {
+        const invoice = event.data.object as any;
+        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        console.log('Invoice paid:', invoice.id, 'subscription:', subId, 'amount:', invoice.amount_paid);
+        // Log billing event to activity_log if we can resolve the org
+        if (subId) {
+          const { data: orgs } = await supabaseAdmin
+            .from('organizations')
+            .select('id, settings')
+            .filter('settings->>stripe_subscription_id', 'eq', subId)
+            .limit(1);
+          if (orgs && orgs.length > 0) {
+            await supabaseAdmin.from('activity_log').insert({
+              org_id: orgs[0].id,
+              entity_type: 'billing',
+              entity_id: invoice.id,
+              action: 'invoice_paid',
+              metadata: { amount: invoice.amount_paid, currency: invoice.currency, period_end: invoice.period_end },
+            });
+          }
+        }
+        break;
+      }
+
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as any;
         console.error('Payment failed for customer:', invoice.customer);
+        const failSubId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        if (failSubId) {
+          const { data: orgs } = await supabaseAdmin
+            .from('organizations')
+            .select('id')
+            .filter('settings->>stripe_subscription_id', 'eq', failSubId)
+            .limit(1);
+          if (orgs && orgs.length > 0) {
+            await supabaseAdmin.from('activity_log').insert({
+              org_id: orgs[0].id,
+              entity_type: 'billing',
+              entity_id: invoice.id,
+              action: 'payment_failed',
+              metadata: { amount: invoice.amount_due, currency: invoice.currency, attempt: invoice.attempt_count },
+            });
+          }
+        }
         break;
       }
 

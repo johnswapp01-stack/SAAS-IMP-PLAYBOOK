@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import type { User } from '@supabase/supabase-js';
+import { useOrg } from '@/hooks/use-org';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
 
 interface SidebarProps {
   user: User;
@@ -13,35 +13,55 @@ interface SidebarProps {
 
 const navigation = [
   {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: String.fromCodePoint(0x1F3E0),
+    description: 'Overview & KPIs',
+  },
+  {
     name: 'Engagements',
     href: '/engagements',
-    icon: '📋',
+    icon: String.fromCodePoint(0x1F4CB),
     description: 'All engagements',
   },
   {
-    name: 'Governance',
+    name: 'Operations',
     href: '/governance',
-    icon: '🔍',
-    description: 'Risk detection & signals',
+    icon: String.fromCodePoint(0x1F4CA),
+    description: 'Time, cost, resources & compliance',
   },
   {
     name: 'AI Agents',
     href: '/agents',
-    icon: '🤖',
+    icon: String.fromCodePoint(0x1F916),
     description: 'Agent console & tasks',
+  },
+  {
+    name: 'Intelligence',
+    href: '/intelligence',
+    icon: String.fromCodePoint(0x1F9E0),
+    description: 'Self-learning & self-healing',
   },
   {
     name: 'Settings',
     href: '/settings',
-    icon: '⚙️',
+    icon: String.fromCodePoint(0x2699, 0xFE0F),
     description: 'Organization & profile',
   },
 ];
+
+const planColors: Record<string, string> = {
+  free: 'bg-muted text-muted-foreground',
+  pro: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  team: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  enterprise: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+};
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { org, loading: orgLoading } = useOrg();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -54,16 +74,25 @@ export function Sidebar({ user }: SidebarProps) {
     user.email?.split('@')[0] ||
     'User';
 
+  const plan = org?.plan || 'free';
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col border-r border-border">
-      {/* Logo */}
+      {/* Org header */}
       <div className="flex items-center gap-2 px-4 py-4 border-b border-border">
-        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-sm">IP</span>
+        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+          <span className="text-primary-foreground font-bold text-sm">
+            {org?.name?.charAt(0)?.toUpperCase() || 'IP'}
+          </span>
         </div>
-        <div>
-          <p className="font-semibold text-sm">Implementation Pro</p>
-          <p className="text-xs text-muted-foreground">Free Plan</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm truncate">
+            {orgLoading ? '...' : org?.name || 'Implementation Pro'}
+          </p>
+          <span className={cn('inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium', planColors[plan])}>
+            {planLabel} Plan
+          </span>
         </div>
       </div>
 
@@ -89,7 +118,7 @@ export function Sidebar({ user }: SidebarProps) {
         })}
       </nav>
 
-      {/* User */}
+      {/* User footer */}
       <div className="border-t border-border px-3 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -108,7 +137,7 @@ export function Sidebar({ user }: SidebarProps) {
             className="text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
             title="Sign out"
           >
-            ↗
+            {String.fromCodePoint(0x2197)}
           </button>
         </div>
       </div>
