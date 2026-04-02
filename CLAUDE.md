@@ -1,43 +1,76 @@
-# SaaS_IMP-Playbook_Items
+# SaaS_IMP-Playbook_Items — Implementation Pro
 
 ## What This Repo Is
 
-The codebase for **Implementation Pro** — an AI-powered professional services platform for SaaS implementation teams. Built on Next.js (App Router), Supabase, Stripe, and the Anthropic SDK.
+The codebase for **Implementation Pro** — a mobile-first, AI-powered SaaS platform that manages, governs, and executes SaaS implementations. It replaces manual spreadsheets, disconnected templates, and tribal knowledge with a unified system where AI agents handle repeatable billable work and implementation teams oversee outcomes.
 
-It also houses the product files for the **SaaS Implementation Playbook Kit** — the 17-template digital product sold on Gumroad that this platform is built around.
+**One-line pitch:** AI agents that run implementations. You run the show.
 
-## Version History
-- v1.0 (Mar 2026): Initial build
-- v1.5: Self-learning/self-healing architecture added
-- v2.0 (Apr 2026): CLAUDE.md restructured to lean format; all operational detail moved to `.claude/rules/`
+**Category:** Implementation Management (distinct from Project Management — this distinction matters in all messaging and code decisions)
 
 ---
 
-## Gumroad Product
+## Version History
+- v1.0 (Mar 2026): Initial scaffold — Gumroad digital product model
+- v1.5: Self-learning/self-healing architecture added
+- v2.0 (Apr 2026): CLAUDE.md restructured to lean format; all operational detail moved to `.claude/rules/`
+- v2.1 (Apr 2026): Full SaaS pivot — Stripe billing, Gumroad deprecated, PRD/Arch/GTM docs published
 
-**SaaS Implementation Playbook Kit** — 17 battle-tested templates for implementation teams, kickoff to go-live.
+---
 
-- **URL:** swappster4.gumroad.com/l/playbook-kit
-- **Pricing:** $12/mo · $79/yr (30-day free trial)
-- **Product ID (life-os):** `10896661-d90e-4e3b-a354-855f84102ede`
+## Product Overview
 
-### Template Sets Included
-1. **Kickoff Prep Kit** — Meeting agenda, pre-kickoff questionnaire, internal alignment checklist
-2. **Stakeholder Alignment Templates** — RACI matrix, communication plan, escalation framework
-3. **Scope Management Toolkit** — MoSCoW tracker, scope change request form, in/out documentation
-4. **Go-Live Checklist** — Phase-gated checklist with owner assignments and sign-off fields
-5. **Status Reporting Templates** — Weekly internal report, customer-facing update, executive summary
-6. **Lessons Learned Framework** — Retro template, categorized findings log, playbook improvement tracker
-7. **Handoff Documentation** — Sales-to-implementation handoff, implementation-to-CS transition doc
+### Pricing (Stripe-Billed — Gumroad is fully deprecated)
 
-### Template Standards
-- All templates use the CARE, MoSCoW, and What/Why/How frameworks
-- Sample data uses the Acme Corp scenario: Rachel Torres, David Kim, Linda Chen, Marcus Webb, John Swapp
-- Sign-off placeholder: `[YOUR SIGN-OFF]` — not "Best Regards," (buyers use their own)
-- Format: `.docx` and `.xlsx` only (editable by buyers)
-- Excel generation: openpyxl; Word generation: docx npm package
-- Every template includes a "How to Use" section
-- Write for the person who picks this up after you're gone
+| Tier | Price | Agent Tasks/Month | Target |
+|------|-------|-------------------|--------|
+| Free | $0 | None | Individual consultants exploring |
+| Pro | $49/mo | 50 | Solo consultants / small teams (1-3) |
+| Team | $149/mo | 500 | Implementation teams (4-15) |
+| Enterprise | Custom | Unlimited | Large PS organizations |
+
+All paid tiers include a 30-day free trial. Annual billing planned for later.
+
+### Gumroad Sunset (in progress)
+The prior product — SaaS Implementation Playbook Kit ($12/mo · $79/yr, `swappster4.gumroad.com/l/playbook-kit`, Product ID `10896661-d90e-4e3b-a354-855f84102ede`) — is being sunset. No new Gumroad sales. Existing subscribers migrated to Pro with 3-month free coupon via Stripe. See GTM doc for full sunset timeline.
+
+### Three Operational Layers
+- **L1: Operations Automation** — resourcing rules, time tracking, financial controls, compliance engine
+- **L2: Delivery Governance** — AI project plans, risk signal detection, health scoring, client updates
+- **L3: Work Execution (AI Agents)** — six agents (Documentation, Communication, Testing, Migration, Configuration, Analysis)
+
+Plus two cross-cutting capabilities: **Self-Learning** (feedback pipeline, org context, prompt refinement) and **Self-Healing** (health monitoring, auto-retry, circuit breakers).
+
+### The 17 Templates → SaaS Features Mapping
+The former Gumroad Playbook Kit templates are now embedded as SaaS features:
+- Kickoff Prep Kit → Onboarding wizard + Checklist tab (kickoff type)
+- Stakeholder Alignment → Stakeholder tab + RACI tab
+- Scope Management → Scope tab (MoSCoW tracker)
+- Go-Live Checklist → Checklist tab (go-live type)
+- Status Reporting → Reports tab + Communication Agent
+- Lessons Learned → Lessons tab
+- Handoff Documentation → Documentation Agent artifacts
+
+### Data Standards
+- Acme Corp scenario (Rachel Torres, David Kim, Linda Chen, Marcus Webb, John Swapp) is the standard seed/sample data
+- Seed file: `supabase/seed/acme_corp.sql`
+- Sign-off placeholder in any generated docs: `[YOUR SIGN-OFF]`
+
+---
+
+## Development Status
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| 1: Foundation | Auth, orgs, engagement CRUD, dashboard, mobile-first UI | In progress |
+| 2: Templates | Scope, Stakeholders, RACI, Checklist, Decisions, Reports, Lessons | Not started |
+| 3: L1 Operations | Resource management, time tracking, financials, compliance | Not started |
+| 4: L2 Governance | AI risk detection, health scoring, client updates | Not started |
+| 5: L3 Agents | Six AI agents, artifact generation, agent console | Not started |
+| 6: Self-Learning | Feedback pipeline, org context, prompt refinement | Not started |
+| 7: Self-Healing | Health monitoring, auto-recovery, error patterns | Not started |
+
+Phases 5, 6, and 7 run in parallel (Weeks 27-34).
 
 ---
 
@@ -47,7 +80,7 @@ It also houses the product files for the **SaaS Implementation Playbook Kit** �
 - `CLAUDE OUTPUTS/` — one subfolder per project
 
 **Source artifacts — read and reference, do not overwrite without explicit request:**
-- `supabase/migrations/001_initial_schema.sql` — deployed DB baseline
+- `supabase/migrations/001_initial_schema.sql` — deployed DB baseline (846 lines, 33 tables, never modify)
 - `supabase/seed/acme_corp.sql` — standard seed data
 
 ---
@@ -58,12 +91,19 @@ Operational detail lives in `.claude/rules/`. CLAUDE.md does not duplicate it.
 
 | When you need... | Read this file |
 |---|---|
-| TypeScript, React, component patterns | `coding-patterns.md` |
+| TypeScript, React, App Router, component patterns | `coding-patterns.md` |
 | npm, package versions, what to install | `dependency-management.md` |
 | Commit format, branch naming | `git-workflow.md` |
 | Schema changes, Supabase migrations | `migrations.md` |
 | Pre-task checklist, anti-pattern scan | `pre-task-checklist.md` |
 | Bug fix / test failure loop | `Self-Healing.md` |
 | Incident log | `Self-Learning.md` |
-| Folder layout, import conventions | `structure.md` |
+| Folder layout, import conventions, route handlers | `structure.md` |
 | Test commands, 5-phase protocol | `testing.md` |
+
+On-demand reference (load only when needed):
+
+| When you need... | Read this file |
+|---|---|
+| Full stack decisions, data flows, DB schema, dev phases, tech debt | `.claude/reference/stack-and-architecture.md` |
+| Running the Health Framework on this CLAUDE.md | `.claude/reference/claude-md-health-framework.md` |

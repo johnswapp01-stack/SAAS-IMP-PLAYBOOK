@@ -79,7 +79,7 @@ npx playwright test
 Manually test at least 3 core flows you did NOT change:
 1. Auth flow (login → dashboard)
 2. Primary CRUD on engagements
-3. Template download or core dashboard feature
+3. Core dashboard feature
 
 If a regression is found: fix it, restart from Phase 1 for that fix.
 
@@ -89,6 +89,8 @@ If a regression is found: fix it, restart from Phase 1 for that fix.
 
 ## Self-Healing Loop
 If any phase fails, activate the loop in `Self-Healing.md`. Do not skip ahead to "just the failing phase." Restart Phase 1 after every fix. Log the incident in `Self-Learning.md`.
+
+**Maximum 3 iterations for the same change.** If you are on the 3rd iteration and still failing, stop. The fix strategy is wrong. State what's happening to the user and propose an alternative approach before continuing.
 
 ## Reporting Format (What / Why / How)
 When the full protocol passes, report results using the What/Why/How framework:

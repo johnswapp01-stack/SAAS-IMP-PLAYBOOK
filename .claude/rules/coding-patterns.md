@@ -24,9 +24,17 @@
 - Define Zod schemas in `src/lib/validations/` or co-located with the form. Schema first, then infer the TypeScript type (`z.infer<typeof schema>`).
 - Never validate form data manually. The schema is the contract.
 
+## AI Integration Patterns
+- AI client: `src/lib/ai/client.ts` (Anthropic SDK instance)
+- Agent system prompts: `src/lib/ai/prompts.ts` (also seeded in `agent_definitions` table)
+- Default model: `claude-sonnet-4-20250514` — stored in `agent_executions.model_used`; do not hardcode in Route Handlers, read from `agent_definitions`
+- All Anthropic API calls are server-side only. Never expose `ANTHROPIC_API_KEY` to the client.
+- AI calls go through `/api/agents/execute` — no direct SDK calls from Client Components.
+- OpenAI fallback is planned (Phase 5) for redundancy. Design agent execution code to be model-agnostic where possible.
+
 ## Error Handling
 - Server Actions and Route Handlers return typed result objects: `{ data, error }` — never throw bare strings.
-- Use `try/catch` around all Supabase calls and Stripe calls. Log errors server-side; return safe messages to the client.
+- Use `try/catch` around all Supabase calls, Stripe calls, and Anthropic calls. Log errors server-side; return safe messages to the client.
 - Client error boundaries: use the `error.tsx` convention at the route group level.
 
 ## Naming Conventions
