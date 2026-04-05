@@ -1,0 +1,12 @@
+{
+  "name": "Linchpin Dark Mode Kit",
+  "colors": {
+    "primary": "#10B981",
+    "secondary": "#020617",
+    "accent": "#1E293B"
+  },
+  "typography": {
+    "primary": "Inter",
+    "mono": "JetBrains Mono"
+  }
+}

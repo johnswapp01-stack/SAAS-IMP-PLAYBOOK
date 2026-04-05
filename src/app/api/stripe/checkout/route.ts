@@ -28,7 +28,10 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?billing=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?billing=cancelled`,
       metadata: { org_id: orgId, user_id: user.id, plan_key: planKey },
-      subscription_data: { metadata: { org_id: orgId, plan_key: planKey } },
+      subscription_data: {
+        metadata: { org_id: orgId, plan_key: planKey },
+        trial_period_days: 30,
+      },
       allow_promotion_codes: true,
     });
 

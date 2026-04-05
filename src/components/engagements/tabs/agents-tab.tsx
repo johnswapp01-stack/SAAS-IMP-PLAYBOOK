@@ -125,7 +125,13 @@ export function AgentsTab({ engagementId }: AgentsTabProps) {
       });
       const result = await res.json();
       if (!res.ok) {
-        alert(`Execution failed: ${result.error || 'Unknown error'}`);
+        const extra =
+          result.code === 'agent_task_quota_exceeded'
+            ? ' Open Settings → Plan & Billing to upgrade or wait until the next month.'
+            : result.code === 'plan_free'
+              ? ' Upgrade to Pro or Team under Settings → Plan & Billing.'
+              : '';
+        alert(`Execution failed: ${result.error || 'Unknown error'}${extra}`);
       }
       fetchData();
       if (selectedTask === taskId) loadTaskDetail(taskId);

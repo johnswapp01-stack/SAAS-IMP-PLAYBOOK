@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOrg } from '@/hooks/use-org';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { ComplianceRulesSection } from '@/components/settings/compliance-rules-section';
+import { getMonthlyAgentTaskLimit } from '@/lib/billing/plan-limits';
 import type { User } from '@supabase/supabase-js';
 
 function useUser() {
@@ -26,19 +27,22 @@ const plans = [
     key: 'free' as const,
     name: 'Free',
     price: '$0',
-    features: '2 engagements, 1 user, all core templates',
+    features:
+      'Explore the workspace; no AI agent runs. Core templates and engagement structure included.',
   },
   {
     key: 'pro' as const,
     name: 'Pro',
     price: '$49/mo',
-    features: 'Unlimited engagements, 3 users, AI status reports, 50 agent tasks/mo',
+    features:
+      'Paid tier with trial: 50 AI agent tasks per month, ideal for solo consultants and very small teams.',
   },
   {
     key: 'team' as const,
     name: 'Team',
     price: '$149/mo',
-    features: 'Unlimited engagements, 25 users, all AI agents, 500 agent tasks/mo',
+    features:
+      '500 AI agent tasks per month for implementation teams that run multiple engagements in parallel.',
   },
 ];
 
@@ -50,9 +54,54 @@ export default function SettingsPage() {
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
+  const [agentTasksCompletedMonth, setAgentTasksCompletedMonth] = useState<number | null>(null);
 
   const currentPlan = org?.plan || 'free';
   const isOwner = role === 'owner' || role === 'admin';
+
+  useEffect(() => {
+    if (!org?.id) {
+      setMemberCount(null);
+      setAgentTasksCompletedMonth(null);
+      return;
+    }
+
+    const supabase = createClient();
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+
+    void (async () => {
+      const { count: members } = await supabase
+        .from('org_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', org.id)
+        .not('accepted_at', 'is', null);
+
+      const { count: tasksDone } = await supabase
+        .from('agent_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', org.id)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null)
+        .gte('completed_at', monthStart.toISOString());
+
+      setMemberCount(members ?? 0);
+      setAgentTasksCompletedMonth(tasksDone ?? 0);
+    })();
+  }, [org?.id]);
+
+  const trialEnd =
+    org?.trial_ends_at && new Date(org.trial_ends_at).getTime() > Date.now()
+      ? new Date(org.trial_ends_at)
+      : null;
+
+  const taskLimit = getMonthlyAgentTaskLimit(currentPlan);
+  const usageUnlimited = !Number.isFinite(taskLimit);
+
+  const currentPlanIdx = plans.findIndex((p) => p.key === currentPlan);
+  const isEnterprisePlan = currentPlan === 'enterprise';
 
   async function handleUpgrade(planKey: string) {
     if (!org) return;
@@ -123,6 +172,15 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {trialEnd && (
+        <div className="mb-6 p-3 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 text-amber-900 dark:text-amber-100 text-sm">
+          Trial active until{' '}
+          <strong>{trialEnd.toLocaleDateString(undefined, { dateStyle: 'medium' })}</strong>. After
+          that, your workspace follows the limits of your selected plan unless billing is updated in
+          Stripe.
+        </div>
+      )}
+
       {error && (
         <div className="mb-6 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
           {error}
@@ -160,8 +218,68 @@ export default function SettingsPage() {
             <span className="text-muted-foreground">Slug</span>
             <span className="text-muted-foreground font-mono text-xs">{org?.slug || '...'}</span>
           </div>
+          {memberCount !== null && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Accepted members</span>
+              <span>{memberCount}</span>
+            </div>
+          )}
         </div>
       </section>
+
+      {isOwner && (
+        <section className="rounded-lg border border-border p-6 mb-6">
+          <h2 className="font-semibold text-lg mb-2">Admin & roles</h2>
+          <p className="text-sm text-muted-foreground mb-3">
+            <strong>Owner / Admin:</strong> billing, plan changes, compliance rules, and demo data
+            seeding. <strong>Member:</strong> day-to-day delivery on engagements.{' '}
+            <strong>Viewer:</strong> read-only visibility for stakeholders who should not edit records.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Member invitations and role edits will live here as membership management ships; for now,
+            usage and billing are the main admin controls.
+          </p>
+        </section>
+      )}
+
+      {/* Workspace usage (admin-facing) */}
+      {isOwner && (
+        <section className="rounded-lg border border-border p-6 mb-6">
+          <h2 className="font-semibold text-lg mb-2">Workspace usage</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Agent tasks completed this calendar month versus your plan quota (UTC month boundary).
+          </p>
+          {currentPlan === 'free' ? (
+            <p className="text-sm text-muted-foreground">
+              AI agent runs are not included on Free. Upgrade to Pro or Team to execute agents and see
+              usage here.
+            </p>
+          ) : agentTasksCompletedMonth !== null ? (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Completed agent tasks (this month)</span>
+                <span className="font-medium tabular-nums">
+                  {agentTasksCompletedMonth}
+                  {usageUnlimited ? '' : ` / ${taskLimit}`}
+                  {usageUnlimited ? ' (unlimited)' : ''}
+                </span>
+              </div>
+              {!usageUnlimited && taskLimit > 0 && (
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{
+                      width: `${Math.min(100, (agentTasksCompletedMonth / taskLimit) * 100)}%`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading usage…</p>
+          )}
+        </section>
+      )}
 
       {/* Compliance Rules */}
       <ComplianceRulesSection />
@@ -173,9 +291,11 @@ export default function SettingsPage() {
         <div className="space-y-4">
           {plans.map((plan) => {
             const isCurrent = plan.key === currentPlan;
+            const planIdx = plans.findIndex((p) => p.key === plan.key);
             const isUpgrade =
-              plans.findIndex((p) => p.key === currentPlan) <
-              plans.findIndex((p) => p.key === plan.key);
+              !isEnterprisePlan &&
+              currentPlanIdx >= 0 &&
+              currentPlanIdx < planIdx;
 
             return (
               <div
@@ -199,7 +319,7 @@ export default function SettingsPage() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{plan.features}</p>
                   </div>
-                  {isUpgrade && isOwner && plan.key !== 'free' && (
+                  {isUpgrade && isOwner && plan.key !== 'free' && !isEnterprisePlan && (
                     <button
                       onClick={() => handleUpgrade(plan.key)}
                       disabled={!!upgradeLoading}
@@ -212,6 +332,31 @@ export default function SettingsPage() {
               </div>
             );
           })}
+
+          {/* Enterprise — not sold via self-serve checkout in-app */}
+          <div
+            className={`rounded-lg border p-4 ${
+              currentPlan === 'enterprise' ? 'border-primary bg-primary/5' : 'border-border'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">Enterprise</span>
+                  <span className="text-sm text-muted-foreground">Custom pricing</span>
+                  {currentPlan === 'enterprise' && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">
+                      Current
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Unlimited AI agent tasks, security reviews, and annual agreements. Enabled by sales
+                  or support on your account—not via the self-serve checkout above.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Manage billing */}

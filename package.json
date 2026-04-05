@@ -12,7 +12,10 @@
     "db:seed": "echo 'Run supabase/seed/acme_corp.sql in your Supabase SQL editor'",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
-    "test:e2e:headed": "npx playwright test --headed"
+    "test:e2e:headed": "npx playwright test --headed",
+    "support:ingest": "node scripts/ingest-support-knowledge.mjs",
+    "verify:env": "node scripts/verify-env.mjs",
+    "verify:worldclass": "npm run verify:env && npm run build"
   },
   "author": "John Swapp",
   "license": "UNLICENSED",
@@ -39,6 +42,7 @@
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^6.0.2",
+    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

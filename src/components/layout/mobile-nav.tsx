@@ -9,12 +9,48 @@ import { useOrg } from '@/hooks/use-org';
 import type { User } from '@supabase/supabase-js';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: String.fromCodePoint(0x1F3E0) },
-  { name: 'Engagements', href: '/engagements', icon: String.fromCodePoint(0x1F4CB) },
-  { name: 'Operations', href: '/governance', icon: String.fromCodePoint(0x1F4CA) },
-  { name: 'AI Agents', href: '/agents', icon: String.fromCodePoint(0x1F916) },
-  { name: 'Intelligence', href: '/intelligence', icon: String.fromCodePoint(0x1F9E0) },
-  { name: 'Settings', href: '/settings', icon: String.fromCodePoint(0x2699, 0xFE0F) },
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: String.fromCodePoint(0x1F3E0),
+    description: 'Overview and KPIs across engagements',
+  },
+  {
+    name: 'Engagements',
+    href: '/engagements',
+    icon: String.fromCodePoint(0x1F4CB),
+    description: 'All customer implementation projects',
+  },
+  {
+    name: 'Operations',
+    href: '/governance',
+    icon: String.fromCodePoint(0x1F4CA),
+    description: 'Time, cost, resources, and compliance',
+  },
+  {
+    name: 'AI Agents',
+    href: '/agents',
+    icon: String.fromCodePoint(0x1F916),
+    description: 'Run and review AI-assisted tasks',
+  },
+  {
+    name: 'Intelligence',
+    href: '/intelligence',
+    icon: String.fromCodePoint(0x1F9E0),
+    description: 'Learning and system health signals',
+  },
+  {
+    name: 'Settings',
+    href: '/settings',
+    icon: String.fromCodePoint(0x2699, 0xFE0F),
+    description: 'Organization, usage, and billing',
+  },
+  {
+    name: 'Help & Support',
+    href: '/support',
+    icon: String.fromCodePoint(0x2753),
+    description: 'Assistant and admin reporting tools',
+  },
 ];
 
 export function MobileNav({ user }: { user: User }) {
@@ -70,16 +106,22 @@ export function MobileNav({ user }: { user: User }) {
               <Link
                 key={item.name}
                 href={item.href}
+                title={`${item.name}: ${item.description}`}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                  'flex items-start gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                   isActive
                     ? 'bg-primary/10 text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                 )}
               >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.name}</span>
+                <span className="text-base leading-none pt-0.5">{item.icon}</span>
+                <span className="min-w-0">
+                  <span className="block">{item.name}</span>
+                  <span className="block text-[11px] font-normal text-muted-foreground leading-snug mt-0.5">
+                    {item.description}
+                  </span>
+                </span>
               </Link>
             );
           })}

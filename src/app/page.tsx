@@ -246,6 +246,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span>&copy; {new Date().getFullYear()} Implementation Pro</span>
           <div className="flex items-center gap-4">
+            <Link href="/status" className="hover:text-foreground transition-colors">Status</Link>
             <Link href="/login" className="hover:text-foreground transition-colors">Log in</Link>
             <Link href="/signup" className="hover:text-foreground transition-colors">Sign up</Link>
           </div>

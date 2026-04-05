@@ -1,0 +1,37 @@
+-- Migration: 002 (reference only — optional SQL; not auto-applied)
+-- Description: Trial backfill patterns. Prefer in-app: Help & Support → Admin Data Studio →
+--   "Set trial end date if missing" (current workspace only, safest).
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- CLICK-BY-CLICK (recommended path)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 1. Sign in to Implementation Pro.
+-- 2. Left menu → Help & Support.
+-- 3. If you are owner/admin: click "Open Admin Data Studio".
+-- 4. In "Trial date backfill", click "Set trial end date if missing".
+-- 5. Read the message; open Settings to confirm the trial banner if a date was set.
+--
+-- ═══════════════════════════════════════════════════════════════════════════
+-- SQL (only if you intentionally batch in Supabase)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- STEP A: Open Supabase Dashboard → your project → SQL → New query.
+-- STEP B: Tighten WHERE. Never run an unrestricted UPDATE in production.
+--
+-- One org (replace UUID):
+-- UPDATE public.organizations
+-- SET trial_ends_at = timezone('utc', now()) + interval '30 days'
+-- WHERE id = '00000000-0000-0000-0000-000000000000'::uuid
+--   AND trial_ends_at IS NULL;
+--
+-- Only Free-tier orgs still missing a trial date:
+-- UPDATE public.organizations
+-- SET trial_ends_at = timezone('utc', now()) + interval '30 days'
+-- WHERE trial_ends_at IS NULL
+--   AND plan = 'free';
+--
+-- Preview rows first:
+-- SELECT id, name, plan, trial_ends_at
+-- FROM public.organizations
+-- WHERE trial_ends_at IS NULL AND plan = 'free';
+--
+-- ROLLBACK (manual): re-run SELECT; UPDATE trial_ends_at to the previous value from audit/backup only.

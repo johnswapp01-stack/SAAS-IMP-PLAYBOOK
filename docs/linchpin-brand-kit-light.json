@@ -1,0 +1,12 @@
+{
+  "name": "Linchpin Light Mode Kit",
+  "colors": {
+    "primary": "#0F172A",
+    "secondary": "#10B981",
+    "neutral": "#F9FAFB"
+  },
+  "typography": {
+    "primary": "Inter",
+    "mono": "JetBrains Mono"
+  }
+}

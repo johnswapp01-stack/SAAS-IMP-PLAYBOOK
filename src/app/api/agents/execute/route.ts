@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAnthropicClient, DEFAULT_MODEL, MAX_TOKENS } from '@/lib/ai/client';
 import { getSystemPrompt } from '@/lib/ai/prompts';
+import { getMonthlyAgentTaskLimit } from '@/lib/billing/plan-limits';
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check plan limits
+    // Plan and monthly agent-task quota (completed tasks this UTC month vs tier cap)
     const { data: org } = await supabase
       .from('organizations')
       .select('plan')
@@ -53,7 +54,39 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (org?.plan === 'free') {
-      return NextResponse.json({ error: 'AI agent execution requires a Pro or Team plan' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'AI agent execution requires a Pro or Team plan.', code: 'plan_free' },
+        { status: 403 }
+      );
+    }
+
+    const monthlyLimit = getMonthlyAgentTaskLimit(org?.plan);
+    if (Number.isFinite(monthlyLimit)) {
+      const monthStart = new Date();
+      monthStart.setUTCDate(1);
+      monthStart.setUTCHours(0, 0, 0, 0);
+
+      const { count: completedThisMonth } = await supabase
+        .from('agent_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', task.org_id)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null)
+        .gte('completed_at', monthStart.toISOString());
+
+      const used = completedThisMonth ?? 0;
+      if (used >= monthlyLimit) {
+        return NextResponse.json(
+          {
+            error:
+              'This workspace reached its agent task limit for the current month. Open Settings to review your plan and usage, or try again next month.',
+            code: 'agent_task_quota_exceeded',
+            limit: monthlyLimit,
+            used,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Mark task as running

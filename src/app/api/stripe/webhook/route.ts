@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, getPlanByPriceId } from '@/lib/stripe/client';
+import { stripe, getPlanByPriceId, getStripe } from '@/lib/stripe/client';
+import { trialEndsAtIsoFromSubscription } from '@/lib/billing/trial';
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 
@@ -40,7 +41,22 @@ export async function POST(req: NextRequest) {
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
         };
-        await supabaseAdmin.from('organizations').update({ plan: planKey as 'pro' | 'team', settings: updatedSettings }).eq('id', orgId);
+
+        let trialEndsAt: string | null = null;
+        const subId = session.subscription;
+        if (typeof subId === 'string') {
+          const subscription = await getStripe().subscriptions.retrieve(subId);
+          trialEndsAt = trialEndsAtIsoFromSubscription(subscription);
+        }
+
+        await supabaseAdmin
+          .from('organizations')
+          .update({
+            plan: planKey as 'pro' | 'team',
+            settings: updatedSettings,
+            trial_ends_at: trialEndsAt,
+          })
+          .eq('id', orgId);
         break;
       }
 
@@ -51,14 +67,20 @@ export async function POST(req: NextRequest) {
 
         const priceId = subscription.items.data[0]?.price.id;
         const planKey = priceId ? getPlanByPriceId(priceId) : null;
-        if (planKey) {
-          await supabaseAdmin.from('organizations').update({ plan: planKey }).eq('id', orgId);
-        }
+        const trialEndsAt = trialEndsAtIsoFromSubscription(subscription);
+
+        const patch: Record<string, unknown> = { trial_ends_at: trialEndsAt };
+        if (planKey) patch.plan = planKey;
 
         if (subscription.cancel_at_period_end) {
-          const { data: org } = await supabaseAdmin.from('organizations').select('settings').eq('id', orgId).single();
-          await supabaseAdmin.from('organizations').update({ settings: { ...((org?.settings as object) ?? {}), cancel_at: subscription.cancel_at } }).eq('id', orgId);
+          const { data: orgRow } = await supabaseAdmin.from('organizations').select('settings').eq('id', orgId).single();
+          patch.settings = {
+            ...((orgRow?.settings as object) ?? {}),
+            cancel_at: subscription.cancel_at,
+          };
         }
+
+        await supabaseAdmin.from('organizations').update(patch).eq('id', orgId);
         break;
       }
 
@@ -66,7 +88,10 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const orgId = subscription.metadata?.org_id;
         if (!orgId) break;
-        await supabaseAdmin.from('organizations').update({ plan: 'free' }).eq('id', orgId);
+        await supabaseAdmin
+          .from('organizations')
+          .update({ plan: 'free', trial_ends_at: null })
+          .eq('id', orgId);
         break;
       }
 

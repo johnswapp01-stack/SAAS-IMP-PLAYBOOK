@@ -118,6 +118,10 @@ export default function OnboardingPage() {
                 Let&apos;s get you set up in under 2 minutes. You&apos;ll create your organization,
                 then optionally add your first engagement.
               </p>
+              <p className="text-xs text-muted-foreground text-left bg-muted/40 rounded-lg px-3 py-2 leading-relaxed">
+                Implementation Pro is built for SaaS implementation delivery—scope, stakeholders,
+                go-live, and governance—not generic project task lists.
+              </p>
               <button onClick={() => setStep(1)} className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
                 Let&apos;s go
               </button>

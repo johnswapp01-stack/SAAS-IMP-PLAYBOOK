@@ -48,6 +48,12 @@ const navigation = [
     icon: String.fromCodePoint(0x2699, 0xFE0F),
     description: 'Organization & profile',
   },
+  {
+    name: 'Help & Support',
+    href: '/support',
+    icon: String.fromCodePoint(0x2753),
+    description: 'Assistant, guides, and admin Data Studio',
+  },
 ];
 
 const planColors: Record<string, string> = {
@@ -104,6 +110,7 @@ export function Sidebar({ user }: SidebarProps) {
             <Link
               key={item.name}
               href={item.href}
+              title={`${item.name}: ${item.description}`}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isActive

@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { newWorkspaceTrialEndsAtIso } from '@/lib/billing/trial';
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
         slug: cleanSlug,
         plan: 'free',
         settings: {},
+        trial_ends_at: newWorkspaceTrialEndsAtIso(),
       })
       .select()
       .single();

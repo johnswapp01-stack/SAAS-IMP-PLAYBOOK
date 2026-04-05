@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import { useOrg } from '@/hooks/use-org';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import {
+  getNextStepsForEngagement,
+  IMPLEMENTATION_POSITIONING_LINE,
+} from '@/lib/product/implementation-lifecycle';
+import type { EngagementStatus } from '@/types';
 
 interface EngagementSummary {
   id: string;
@@ -184,6 +189,10 @@ export default function DashboardPage() {
     );
   }
 
+  const activeEngagements = engagements.filter(
+    (e) => !['complete', 'on_hold'].includes(e.status)
+  );
+
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
@@ -197,6 +206,9 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold">{greeting}</h1>
         <p className="text-muted-foreground mt-1">Here&apos;s where things stand across your engagements.</p>
+        <p className="text-xs text-muted-foreground mt-2 max-w-2xl leading-relaxed border-l-2 border-primary/30 pl-3">
+          {IMPLEMENTATION_POSITIONING_LINE}
+        </p>
       </div>
 
       {/* KPI Cards */}
@@ -206,6 +218,35 @@ export default function DashboardPage() {
         <KpiCard label="Open Decisions" value={stats.openDecisions} subtext="Awaiting resolution" href="/engagements" />
         <KpiCard label="Agent Tasks (Month)" value={stats.agentTasksThisMonth} subtext={stats.acceptanceRate > 0 ? `${stats.acceptanceRate}% accepted` : 'No feedback yet'} href="/agents" />
       </div>
+
+      {/* Lifecycle playbook: concrete next steps by phase */}
+      {activeEngagements.length > 0 && (
+        <div className="border border-border rounded-lg p-4 bg-muted/20">
+          <h2 className="text-sm font-medium mb-1">Playbook suggestions</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            One suggested next step per active engagement (links open the right tab).
+          </p>
+          <ul className="space-y-2">
+            {activeEngagements.slice(0, 5).map((eng) => {
+              const steps = getNextStepsForEngagement(eng.id, eng.status as EngagementStatus);
+              const step = steps[0];
+              if (!step) return null;
+              return (
+                <li key={eng.id}>
+                  <Link
+                    href={step.href}
+                    className="text-sm text-primary hover:underline font-medium"
+                  >
+                    {eng.name}
+                  </Link>
+                  <span className="text-sm text-muted-foreground"> — {step.title}</span>
+                  <span className="sr-only">.</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {/* Health Distribution */}
       {stats.activeEngagements > 0 && (
@@ -255,8 +296,17 @@ export default function DashboardPage() {
               </Link>
             ))}
             {engagements.length === 0 && (
-              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                No engagements yet. <Link href="/engagements/new" className="text-primary hover:underline">Create one</Link>
+              <div className="px-4 py-8 text-center text-sm text-muted-foreground max-w-md mx-auto space-y-2">
+                <p>
+                  An engagement is one customer implementation (one project you run from kickoff through
+                  go-live).
+                </p>
+                <p>
+                  <Link href="/engagements/new" className="text-primary font-medium hover:underline">
+                    Create your first engagement
+                  </Link>{' '}
+                  or load sample data from Settings if you want to explore with demo content.
+                </p>
               </div>
             )}
           </div>
@@ -318,12 +368,16 @@ export default function DashboardPage() {
 
       {/* Quick actions */}
       <div className="border border-border rounded-lg p-4">
-        <h2 className="text-sm font-medium mb-3">Quick Actions</h2>
+        <h2 className="text-sm font-medium mb-3">Quick actions</h2>
+        <p className="text-xs text-muted-foreground mb-3">
+          Common moves: start work, review operational controls, or run an AI task.
+        </p>
         <div className="flex flex-wrap gap-2">
-          <Link href="/engagements/new" className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90">New Engagement</Link>
-          <Link href="/governance" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">Operations</Link>
-          <Link href="/agents" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">Agent Console</Link>
+          <Link href="/engagements/new" className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90">New engagement</Link>
+          <Link href="/governance" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">Operations (time, budget, compliance)</Link>
+          <Link href="/agents" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">AI agent console</Link>
           <Link href="/intelligence" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">Intelligence</Link>
+          <Link href="/settings" className="px-3 py-1.5 border border-input rounded-md text-sm hover:bg-accent">Settings & billing</Link>
         </div>
       </div>
     </div>
